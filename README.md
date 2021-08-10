@@ -1,8 +1,6 @@
-# Welcome to your CDK TypeScript project!
+# FIT3162 Group 5 Backend
 
-This is a blank project for TypeScript development with CDK.
-
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+This is our backend application for Thrive, developed using TypeScript and the AWS CDK.
 
 ## Useful commands
 
