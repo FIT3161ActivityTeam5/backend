@@ -3,10 +3,13 @@ import * as apigw from "@aws-cdk/aws-apigatewayv2";
 import * as apigw_auth from "@aws-cdk/aws-apigatewayv2-authorizers";
 import * as apigw_integrations from "@aws-cdk/aws-apigatewayv2-integrations";
 import * as lambda from "@aws-cdk/aws-lambda";
+import ThriveTables from "./dynamo-tables";
 
 export class ThriveAppStack extends cdk.Stack {
     constructor(app: cdk.App, id: string) {
         super(app, id);
+
+        const tables = ThriveTables(this);
 
         const testFunction = new lambda.Function(this, "TestFunction", {
             code: new lambda.AssetCode("lib/src/test-function"),
@@ -14,6 +17,16 @@ export class ThriveAppStack extends cdk.Stack {
             runtime: lambda.Runtime.NODEJS_12_X,
             environment: {
                 TABLE_NAME: "something",
+            },
+        });
+
+        // This is the function that will handle map data
+        const mapFunction = new lambda.Function(this, "MapFunction", {
+            code: new lambda.AssetCode("lib/src/map"),
+            handler: "out/app.handler",
+            runtime: lambda.Runtime.NODEJS_12_X,
+            environment: {
+                TABLE_NAME: tables.mapDataTable.tableName,
             },
         });
 
@@ -35,6 +48,26 @@ export class ThriveAppStack extends cdk.Stack {
             }),
             path: "/test",
             methods: [apigw.HttpMethod.GET],
+            authorizer: defaultJWTAuthorizer,
+        });
+
+        api.addRoutes({
+            integration: new apigw_integrations.LambdaProxyIntegration({
+                handler: mapFunction,
+                payloadFormatVersion: apigw.PayloadFormatVersion.VERSION_2_0,
+            }),
+            path: "/map",
+            methods: [apigw.HttpMethod.POST],
+            authorizer: defaultJWTAuthorizer,
+        });
+
+        api.addRoutes({
+            integration: new apigw_integrations.LambdaProxyIntegration({
+                handler: mapFunction,
+                payloadFormatVersion: apigw.PayloadFormatVersion.VERSION_2_0,
+            }),
+            path: "/map/{mapid}",
+            methods: [apigw.HttpMethod.GET, apigw.HttpMethod.PATCH],
             authorizer: defaultJWTAuthorizer,
         });
     }
