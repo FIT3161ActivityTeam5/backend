@@ -1,0 +1,46 @@
+{
+    "version": "2.0",
+    "routeKey": "GET /map/{mapid}",
+    "rawPath": "/map/1234",
+    "rawQueryString": "asd=potato",
+    "headers": {
+        "accept": "*/*",
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikd1Smk0Zjk4cjJjMzdlUDZmakthWCJ9.eyJpc3MiOiJodHRwczovL2Rldi12YWs4MWI1OS51cy5hdXRoMC5jb20vIiwic3ViIjoiMWlmY3dSVUpUdE5lV1dZSHVaM2theUU4QVJ5d210S0lAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vcXF2d25samF0ZS5leGVjdXRlLWFwaS5hcC1zb3V0aGVhc3QtMi5hbWF6b25hd3MuY29tIiwiaWF0IjoxNjI5NzcwODk5LCJleHAiOjE2Mjk4NTcyOTksImF6cCI6IjFpZmN3UlVKVHROZVdXWUh1WjNrYXlFOEFSeXdtdEtJIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0.GjaER3j_6_X3r_nbEcQ7j6BLpDA2uO4p0JmwTFbtehxxl2h1VLaTIHGaKLJQdShViZ7s5XoW9e46twXNHAN-YU-K-Cuoq0a_j8VNn7fcoSIfZKGjxURwC751m9EuBV5NDB_hWjLiV14pTjBJgWXKUawno8OxyfCIb6-NWOMcOcF3Bv76ZF82Vpr88d7x2KvjckqrKMYEvsi0c_9hKDfTFzQvXLNt_TKbguY7152raW8BBF_HynAIQU5wMv5vZFeZsA9rpk6LMRx7QINCZYBqKyD6KFlN4MdRCMwn-r19tVNlNC_xL475wwOsqWi7hewR4fulfSBAFdJ5Z9qAY2lzeQ",
+        "content-length": "0",
+        "content-type": "application/json",
+        "host": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
+        "user-agent": "insomnia/2021.4.1",
+        "x-amzn-trace-id": "Root=1-612459cb-3708751968cf1f707277b293",
+        "x-forwarded-for": "180.150.62.116",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+    },
+    "queryStringParameters": {
+        "asd": "potato"
+    },
+    "requestContext": {
+        "accountId": "670960088768",
+        "apiId": "qqvwnljate",
+        "authorizer": {
+            "jwt": ["Object"]
+        },
+        "domainName": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
+        "domainPrefix": "qqvwnljate",
+        "http": {
+            "method": "GET",
+            "path": "/map/1234",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "180.150.62.116",
+            "userAgent": "insomnia/2021.4.1"
+        },
+        "requestId": "EjL35jiAywMEPCw=",
+        "routeKey": "GET /map/{mapid}",
+        "stage": "$default",
+        "time": "24/Aug/2021:02:30:35 +0000",
+        "timeEpoch": 1629772235920
+    },
+    "pathParameters": {
+        "mapid": "1234"
+    },
+    "isBase64Encoded": false
+}

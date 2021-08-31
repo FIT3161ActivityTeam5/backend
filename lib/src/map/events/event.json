@@ -1,62 +1,54 @@
 {
-  "body": "{\"message\": \"hello world\"}",
-  "resource": "/{proxy+}",
-  "path": "/path/to/resource",
-  "httpMethod": "POST",
-  "isBase64Encoded": false,
-  "queryStringParameters": {
-    "foo": "bar"
-  },
-  "pathParameters": {
-    "proxy": "/path/to/resource"
-  },
-  "stageVariables": {
-    "baz": "qux"
-  },
-  "headers": {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Encoding": "gzip, deflate, sdch",
-    "Accept-Language": "en-US,en;q=0.8",
-    "Cache-Control": "max-age=0",
-    "CloudFront-Forwarded-Proto": "https",
-    "CloudFront-Is-Desktop-Viewer": "true",
-    "CloudFront-Is-Mobile-Viewer": "false",
-    "CloudFront-Is-SmartTV-Viewer": "false",
-    "CloudFront-Is-Tablet-Viewer": "false",
-    "CloudFront-Viewer-Country": "US",
-    "Host": "1234567890.execute-api.us-east-1.amazonaws.com",
-    "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "Custom User Agent String",
-    "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
-    "X-Amz-Cf-Id": "cDehVQoZnx43VYQb9j2-nvCh-9z396Uhbp027Y2JvkCPNLmGJHqlaA==",
-    "X-Forwarded-For": "127.0.0.1, 127.0.0.2",
-    "X-Forwarded-Port": "443",
-    "X-Forwarded-Proto": "https"
-  },
-  "requestContext": {
-    "accountId": "123456789012",
-    "resourceId": "123456",
-    "stage": "prod",
-    "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
-    "requestTime": "09/Apr/2015:12:34:56 +0000",
-    "requestTimeEpoch": 1428582896000,
-    "identity": {
-      "cognitoIdentityPoolId": null,
-      "accountId": null,
-      "cognitoIdentityId": null,
-      "caller": null,
-      "accessKey": null,
-      "sourceIp": "127.0.0.1",
-      "cognitoAuthenticationType": null,
-      "cognitoAuthenticationProvider": null,
-      "userArn": null,
-      "userAgent": "Custom User Agent String",
-      "user": null
+    "version": "2.0",
+    "routeKey": "POST /map",
+    "rawPath": "/map",
+    "rawQueryString": "asd=potato",
+    "headers": {
+        "accept": "*/*",
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikd1Smk0Zjk4cjJjMzdlUDZmakthWCJ9.eyJpc3MiOiJodHRwczovL2Rldi12YWs4MWI1OS51cy5hdXRoMC5jb20vIiwic3ViIjoiMWlmY3dSVUpUdE5lV1dZSHVaM2theUU4QVJ5d210S0lAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vcXF2d25samF0ZS5leGVjdXRlLWFwaS5hcC1zb3V0aGVhc3QtMi5hbWF6b25hd3MuY29tIiwiaWF0IjoxNjI5MjM5NDkyLCJleHAiOjE2MjkzMjU4OTIsImF6cCI6IjFpZmN3UlVKVHROZVdXWUh1WjNrYXlFOEFSeXdtdEtJIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0.E_3qP1l_Q_yDgVtcn0-Iu8sKUO7hb08mC1oYlKApM3tCD4FoFhFl8CNuKX3cpTdpq5YnrKBhYltBXgr5AlFd71RVMgsn54zLTgCxjMze3Z6EPmgBsb13MnNiSpArS_gNKj8w27-bR-lD6Lr3hyVw4zuZM9-JWz2Qcr1TrXhBgOdNG139KYJ_Fm_sIgoOk9OLIZADG2350oLtZzoZqllvuq7me07jBZD21ekOuIK4E-DcQzt0P7dilEh82IxnVL0nla1NtbdzqRuMDqNZ06Xyaq3PAWhd8aIcMJ3dq4sx5dsh7BFu7mmQI3N2YklSNf3Or8WGp67S-Y6HxEc5Zscjig",
+        "content-length": "0",
+        "content-type": "application/json",
+        "host": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
+        "user-agent": "insomnia/2021.4.1",
+        "x-amzn-trace-id": "Root=1-611c3d81-424b126800e89063310d7488",
+        "x-forwarded-for": "180.150.62.116",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
     },
-    "path": "/prod/path/to/resource",
-    "resourcePath": "/{proxy+}",
-    "httpMethod": "POST",
-    "apiId": "1234567890",
-    "protocol": "HTTP/1.1"
-  }
+    "queryStringParameters": {
+        "asd": "potato"
+    },
+    "requestContext": {
+        "accountId": "670960088768",
+        "apiId": "qqvwnljate",
+        "authorizer": {
+            "jwt": {
+                "claims": {
+                    "aud": "https://qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
+                    "azp": "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI",
+                    "exp": "1629325892",
+                    "gty": "client-credentials",
+                    "iat": "1629239492",
+                    "iss": "https://dev-vak81b59.us.auth0.com/",
+                    "sub": "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI@clients"
+                },
+                "scopes": null
+            }
+        },
+        "domainName": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
+        "domainPrefix": "qqvwnljate",
+        "http": {
+            "method": "POST",
+            "path": "/map",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "180.150.62.116",
+            "userAgent": "insomnia/2021.4.1"
+        },
+        "requestId": "EO6MTjIdywMEPhg=",
+        "routeKey": "POST /map",
+        "stage": "$default",
+        "time": "17/Aug/2021:22:51:45 +0000",
+        "timeEpoch": 1629240705767
+    },
+    "isBase64Encoded": false
 }
