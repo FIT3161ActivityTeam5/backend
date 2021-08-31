@@ -6,7 +6,7 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
-
+.aws-sam
 
 # Created by https://www.gitignore.io/api/osx,node,linux,windows
 
