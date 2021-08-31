@@ -10,6 +10,7 @@ export class ThriveAppStack extends cdk.Stack {
         super(app, id);
 
         const tables = ThriveTables(this);
+        const mapTable = tables.mapDataTable;
 
         const testFunction = new lambda.Function(this, "TestFunction", {
             code: new lambda.AssetCode("lib/src/test-function"),
@@ -29,6 +30,7 @@ export class ThriveAppStack extends cdk.Stack {
                 TABLE_NAME: tables.mapDataTable.tableName,
             },
         });
+        mapTable.grantReadWriteData(mapFunction);
 
         // I'm not adding the authorizer as a default here because I need the
         // endpoint of the API for the jwtAudience
