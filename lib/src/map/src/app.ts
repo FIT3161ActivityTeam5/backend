@@ -6,12 +6,10 @@ import {
     DynamoDBClient,
     QueryCommand,
     QueryCommandInput,
-    QueryCommandOutput,
     PutItemCommand,
     PutItemCommandInput,
-    PutItemCommandOutput,
 } from "@aws-sdk/client-dynamodb";
-import crypto from "crypto";
+import * as crypto from "crypto";
 
 const client = new DynamoDBClient({});
 
@@ -123,16 +121,11 @@ const handleGetQuery = async (
 
     // Run the query
     try {
-        console.log("before");
-        console.log(process.env.TABLE_NAME);
         const data = await withDynamoClientQueryItemSend(queryCommand);
-        console.log("after");
         if (!data.Items || data.Items.length === 0) {
             throw "No items found";
         }
-
         const res: mapData[] = [];
-        console.log(data.Items[0]);
         for (let i = 0; i < data.Items.length; i++) {
             res.push(cleanMapData(data.Items[i] as mapData));
         }
