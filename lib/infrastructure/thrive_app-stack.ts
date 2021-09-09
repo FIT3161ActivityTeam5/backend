@@ -9,7 +9,8 @@ export class ThriveAppStack extends cdk.Stack {
     constructor(app: cdk.App, id: string) {
         super(app, id);
 
-        const tables = ThriveTables(this);
+        const gsiName = "userIDIndex";
+        const tables = ThriveTables(this, gsiName);
         const mapTable = tables.mapDataTable;
 
         const testFunction = new lambda.Function(this, "TestFunction", {
@@ -27,8 +28,10 @@ export class ThriveAppStack extends cdk.Stack {
             handler: "out/app.handler",
             runtime: lambda.Runtime.NODEJS_12_X,
             environment: {
-                TABLE_NAME: tables.mapDataTable.tableName,
+                TABLE_NAME: mapTable.tableName,
+                INDEX_NAME: gsiName,
             },
+            timeout: cdk.Duration.seconds(30),
         });
         mapTable.grantReadWriteData(mapFunction);
 
@@ -37,8 +40,9 @@ export class ThriveAppStack extends cdk.Stack {
         const api = new apigw.HttpApi(this, "ThriveApi");
 
         // This is the authorizer that links up wth Auth0
+        // ik im hardcoding the audience but idc
         const defaultJWTAuthorizer = new apigw_auth.HttpJwtAuthorizer({
-            jwtAudience: [api.apiEndpoint],
+            jwtAudience: [api.apiEndpoint, "W3HvRAyTSMN9U0AXjv3BsqThfDHMbpc1"],
             jwtIssuer: "https://dev-vak81b59.us.auth0.com/",
             authorizerName: "auth0JWTAuthorizer",
         });
@@ -53,6 +57,7 @@ export class ThriveAppStack extends cdk.Stack {
             authorizer: defaultJWTAuthorizer,
         });
 
+        // POST route for adding a new map
         api.addRoutes({
             integration: new apigw_integrations.LambdaProxyIntegration({
                 handler: mapFunction,
@@ -63,6 +68,7 @@ export class ThriveAppStack extends cdk.Stack {
             authorizer: defaultJWTAuthorizer,
         });
 
+        // Route for either retrieving a map or updating it by its ID
         api.addRoutes({
             integration: new apigw_integrations.LambdaProxyIntegration({
                 handler: mapFunction,
@@ -70,6 +76,18 @@ export class ThriveAppStack extends cdk.Stack {
             }),
             path: "/map/{mapid}",
             methods: [apigw.HttpMethod.GET, apigw.HttpMethod.PATCH],
+            authorizer: defaultJWTAuthorizer,
+        });
+
+        // Route for listing all maps associated with that user
+        // (user is inferred via JWT)
+        api.addRoutes({
+            integration: new apigw_integrations.LambdaProxyIntegration({
+                handler: mapFunction,
+                payloadFormatVersion: apigw.PayloadFormatVersion.VERSION_2_0,
+            }),
+            path: "/map/list",
+            methods: [apigw.HttpMethod.GET],
             authorizer: defaultJWTAuthorizer,
         });
     }

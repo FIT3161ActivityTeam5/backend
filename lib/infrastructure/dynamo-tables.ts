@@ -1,7 +1,7 @@
 import * as cdk from "@aws-cdk/core";
 import * as dynamodb from "@aws-cdk/aws-dynamodb";
 
-export default function ThriveTables(stack: cdk.Stack) {
+export default function ThriveTables(stack: cdk.Stack, gsiName: string) {
     const defaultRemovalPolicy = cdk.RemovalPolicy.DESTROY;
 
     const mapDataTable = new dynamodb.Table(stack, "ThriveMapDataTable", {
@@ -13,12 +13,12 @@ export default function ThriveTables(stack: cdk.Stack) {
         removalPolicy: defaultRemovalPolicy,
     });
     mapDataTable.addGlobalSecondaryIndex({
-        indexName: "userIDIndex",
+        indexName: gsiName,
         partitionKey: {
             name: "associatedUserID",
-            type: dynamodb.AttributeType.STRING
-        }
-    })
+            type: dynamodb.AttributeType.STRING,
+        },
+    });
 
     return { mapDataTable };
 }
