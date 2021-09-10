@@ -6,12 +6,10 @@ import {
     DynamoDBClient,
     QueryCommand,
     QueryCommandInput,
-    QueryCommandOutput,
     PutItemCommand,
     PutItemCommandInput,
-    PutItemCommandOutput,
 } from "@aws-sdk/client-dynamodb";
-import crypto from "crypto";
+import { randomBytes } from "crypto";
 
 const client = new DynamoDBClient({});
 
@@ -77,7 +75,7 @@ const putOrUpdateItem = async (
             body: JSON.stringify({ mapID: mapID }),
         };
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return {
             statusCode: 500,
             body: JSON.stringify("Internal server error"),
@@ -89,7 +87,7 @@ const handlePost = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     // Extract data from request
-    const userID = event.requestContext.authorizer?.jwt.claims.azp as string;
+    const userID = event.requestContext.authorizer?.jwt.claims.sub as string;
     const data = event.headers as postHeaders;
     if (data.mapdata === undefined) {
         return {
@@ -97,7 +95,7 @@ const handlePost = async (
             body: JSON.stringify("mapdata not specified"),
         };
     }
-    const mapID = crypto.randomBytes(20).toString("hex");
+    const mapID = randomBytes(20).toString("hex");
     return putOrUpdateItem(mapID, data.mapdata, userID);
 };
 
@@ -123,21 +121,16 @@ const handleGetQuery = async (
 
     // Run the query
     try {
-        console.log("before");
-        console.log(process.env.TABLE_NAME);
         const data = await withDynamoClientQueryItemSend(queryCommand);
-        console.log("after");
         if (!data.Items || data.Items.length === 0) {
-            throw "No items found";
+            return { statusCode: 404, body: JSON.stringify([]) };
         }
-
         const res: mapData[] = [];
-        console.log(data.Items[0]);
         for (let i = 0; i < data.Items.length; i++) {
             res.push(cleanMapData(data.Items[i] as mapData));
         }
         if (Object.keys(res).length === 0) {
-            return { statusCode: 404, body: "Map not found" };
+            return { statusCode: 404, body: JSON.stringify([]) };
         }
         return {
             statusCode: 200,
@@ -145,10 +138,13 @@ const handleGetQuery = async (
         };
     } catch (error) {
         if (error === "No items found") {
-            return { statusCode: 200, body: JSON.stringify([]) };
+            return { statusCode: 404, body: JSON.stringify([]) };
         }
-        console.log(error);
-        return { statusCode: 500, body: "Internal Server Error (own)" };
+        console.error(error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify("Internal Server Error (own)"),
+        };
     }
 };
 
@@ -164,11 +160,11 @@ const handleGet = async (
         // Extracting the map ID from the GET request
         const params = event.pathParameters;
         if (!params) {
-            return { statusCode: 400, body: "No map ID" };
+            return { statusCode: 400, body: JSON.stringify("No map ID") };
         }
         const mapID = params.mapid;
         if (!mapID) {
-            return { statusCode: 400, body: "No map ID" };
+            return { statusCode: 400, body: JSON.stringify("No map ID") };
         }
         return handleGetQuery("mapID", mapID);
     }
@@ -178,13 +174,13 @@ const handlePatch = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     if (event.pathParameters === undefined) {
-        return { statusCode: 400, body: "mapID not specified" };
+        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
     }
     const mapID = event.pathParameters.mapid;
     if (mapID === undefined) {
-        return { statusCode: 400, body: "mapID not specified" };
+        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
     }
-    const userID = event.requestContext.authorizer?.jwt.claims.azp as string;
+    const userID = event.requestContext.authorizer?.jwt.claims.sub as string;
     const data = event.headers as patchHeaders;
     if (data.mapdata === undefined) {
         return {
@@ -192,6 +188,24 @@ const handlePatch = async (
             body: JSON.stringify("mapdata not specified"),
         };
     }
+    const res = await withDynamoClientQueryItemSend(
+        new QueryCommand({
+            TableName: process.env.TABLE_NAME,
+            KeyConditionExpression: "mapID = :s",
+            ExpressionAttributeValues: {
+                ":s": {
+                    S: mapID,
+                },
+            },
+        })
+    );
+    if (res.Count === 0) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify("A map with specified mapid does not exist"),
+        };
+    }
+
     return putOrUpdateItem(mapID, data.mapdata, userID);
 };
 
@@ -202,7 +216,7 @@ export const handler = async (
     console.log(event.requestContext.authorizer);
 
     const requestType = event.requestContext.http.method;
-    let result;
+    let result: APIGatewayProxyStructuredResultV2;
 
     switch (requestType) {
         case "POST":
