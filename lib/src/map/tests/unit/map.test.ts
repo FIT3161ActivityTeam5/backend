@@ -1,5 +1,6 @@
 import * as app from "../../src/app";
-import getEvent from "../../events/get_event";
+import getEvent from "../../events/getEvent";
+import postEvent from "../../events/postEvent";
 
 const testJwtSubject = "testJWTSubjectValue";
 const testMapId = "an test ID";
@@ -63,7 +64,7 @@ describe("Test GET /map/{mapid}", () => {
             },
         });
 
-        expect(data.statusCode).toEqual(200);
+        expect(data.statusCode).toEqual(404);
         expect(JSON.parse(data.body || "")).toEqual([]);
     });
 });
@@ -73,7 +74,7 @@ describe("Test GET /map/list", () => {
         jest.restoreAllMocks();
     });
 
-    test("Handles no items found error", async () => {
+    test("Handles no items found", async () => {
         const event = getEvent({ jwtSubject: testJwtSubject, isList: true });
         const spy = jest
             .spyOn(app, "withDynamoClientQueryItemSend")
@@ -86,7 +87,7 @@ describe("Test GET /map/list", () => {
                 ExpressionAttributeValues: { ":s": { S: testJwtSubject } },
             },
         });
-        expect(data.statusCode).toEqual(200);
+        expect(data.statusCode).toEqual(404);
         expect(JSON.parse(data.body || "")).toEqual([]);
     });
 
@@ -154,5 +155,17 @@ describe("Test GET /map/list", () => {
         });
         expect(data.statusCode).toEqual(200);
         expect(JSON.parse(data.body || "")).toHaveLength(2);
+    });
+});
+
+describe("Test POST /map", () => {
+    test("Handles empty mapdata", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
+        const event = postEvent();
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("mapdata not specified");
     });
 });

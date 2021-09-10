@@ -1,16 +1,16 @@
 {
     "version": "2.0",
-    "routeKey": "POST /map",
-    "rawPath": "/map",
+    "routeKey": "GET /map/list",
+    "rawPath": "/map/list",
     "rawQueryString": "asd=potato",
     "headers": {
         "accept": "*/*",
-        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikd1Smk0Zjk4cjJjMzdlUDZmakthWCJ9.eyJpc3MiOiJodHRwczovL2Rldi12YWs4MWI1OS51cy5hdXRoMC5jb20vIiwic3ViIjoiMWlmY3dSVUpUdE5lV1dZSHVaM2theUU4QVJ5d210S0lAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vcXF2d25samF0ZS5leGVjdXRlLWFwaS5hcC1zb3V0aGVhc3QtMi5hbWF6b25hd3MuY29tIiwiaWF0IjoxNjI5MjM5NDkyLCJleHAiOjE2MjkzMjU4OTIsImF6cCI6IjFpZmN3UlVKVHROZVdXWUh1WjNrYXlFOEFSeXdtdEtJIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0.E_3qP1l_Q_yDgVtcn0-Iu8sKUO7hb08mC1oYlKApM3tCD4FoFhFl8CNuKX3cpTdpq5YnrKBhYltBXgr5AlFd71RVMgsn54zLTgCxjMze3Z6EPmgBsb13MnNiSpArS_gNKj8w27-bR-lD6Lr3hyVw4zuZM9-JWz2Qcr1TrXhBgOdNG139KYJ_Fm_sIgoOk9OLIZADG2350oLtZzoZqllvuq7me07jBZD21ekOuIK4E-DcQzt0P7dilEh82IxnVL0nla1NtbdzqRuMDqNZ06Xyaq3PAWhd8aIcMJ3dq4sx5dsh7BFu7mmQI3N2YklSNf3Or8WGp67S-Y6HxEc5Zscjig",
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ikd1Smk0Zjk4cjJjMzdlUDZmakthWCJ9.eyJpc3MiOiJodHRwczovL2Rldi12YWs4MWI1OS51cy5hdXRoMC5jb20vIiwic3ViIjoiMWlmY3dSVUpUdE5lV1dZSHVaM2theUU4QVJ5d210S0lAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vcXF2d25samF0ZS5leGVjdXRlLWFwaS5hcC1zb3V0aGVhc3QtMi5hbWF6b25hd3MuY29tIiwiaWF0IjoxNjMwNTQ2NzQ5LCJleHAiOjE2MzA2MzMxNDksImF6cCI6IjFpZmN3UlVKVHROZVdXWUh1WjNrYXlFOEFSeXdtdEtJIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0.OicrCegssyRcdzi75c3N029TI-OO8rgPDLVJ50Za21b1y547Iel_c04gaLMdfHwc_Euum4c3RzEAG3z-yOUtiIyiWfphWVFBlegZbo9BTYH5gft4Rwypiwm2KOLC701WAYEZ-vQLHMDnMrB7z-evQ1a6EfqMYTOlxP-PgYsHJGLEmLK35M50XJr0-W8wq6QJMBQhW-pgd7x36v_VzvdYPLpuYhi6YW1PiSFAdiBL82yZ50_wuHUUayFdB_c6xbdYn2_i3SeKAuoMxsiKj1Je_7HqQCl0DlrEEGLgP2NNU2Pvp7LjJCX6-_GRWj0GW3V_NOIMdWjKfLGkxNvpjw5Q1Q",
         "content-length": "0",
         "content-type": "application/json",
         "host": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
         "user-agent": "insomnia/2021.4.1",
-        "x-amzn-trace-id": "Root=1-611c3d81-424b126800e89063310d7488",
+        "x-amzn-trace-id": "Root=1-612459cb-3708751968cf1f707277b293",
         "x-forwarded-for": "180.150.62.116",
         "x-forwarded-port": "443",
         "x-forwarded-proto": "https"
@@ -26,9 +26,9 @@
                 "claims": {
                     "aud": "https://qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
                     "azp": "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI",
-                    "exp": "1629325892",
+                    "exp": "1631247324",
                     "gty": "client-credentials",
-                    "iat": "1629239492",
+                    "iat": "1631160924",
                     "iss": "https://dev-vak81b59.us.auth0.com/",
                     "sub": "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI@clients"
                 },
@@ -38,17 +38,17 @@
         "domainName": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
         "domainPrefix": "qqvwnljate",
         "http": {
-            "method": "POST",
-            "path": "/map",
+            "method": "GET",
+            "path": "/map/list",
             "protocol": "HTTP/1.1",
             "sourceIp": "180.150.62.116",
             "userAgent": "insomnia/2021.4.1"
         },
-        "requestId": "EO6MTjIdywMEPhg=",
-        "routeKey": "POST /map",
+        "requestId": "EjL35jiAywMEPCw=",
+        "routeKey": "GET /map/list",
         "stage": "$default",
-        "time": "17/Aug/2021:22:51:45 +0000",
-        "timeEpoch": 1629240705767
+        "time": "24/Aug/2021:02:30:35 +0000",
+        "timeEpoch": 1629772235920
     },
     "isBase64Encoded": false
 }

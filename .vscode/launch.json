@@ -11,8 +11,10 @@
             },
             "lambda": {
                 "runtime": "nodejs12.x",
-                "payload": {},
-                "environmentVariables": {}
+                "environmentVariables": {
+                    "TABLE_NAME": "ThriveAppStack-ThriveMapDataTable544698E8-D1UFHUEIKNU1",
+                    "INDEX_NAME": "userIDIndex"
+                }
             }
         },
         {

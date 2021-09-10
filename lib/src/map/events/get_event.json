@@ -22,7 +22,18 @@
         "accountId": "670960088768",
         "apiId": "qqvwnljate",
         "authorizer": {
-            "jwt": ["Object"]
+            "jwt": {
+                "claims": {
+                    "aud": "https://qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
+                    "azp": "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI",
+                    "exp": "1631247324",
+                    "gty": "client-credentials",
+                    "iat": "1631160924",
+                    "iss": "https://dev-vak81b59.us.auth0.com/",
+                    "sub": "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI@clients"
+                },
+                "scopes": null
+            }
         },
         "domainName": "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
         "domainPrefix": "qqvwnljate",

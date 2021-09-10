@@ -123,14 +123,14 @@ const handleGetQuery = async (
     try {
         const data = await withDynamoClientQueryItemSend(queryCommand);
         if (!data.Items || data.Items.length === 0) {
-            throw "No items found";
+            return { statusCode: 404, body: JSON.stringify([]) };
         }
         const res: mapData[] = [];
         for (let i = 0; i < data.Items.length; i++) {
             res.push(cleanMapData(data.Items[i] as mapData));
         }
         if (Object.keys(res).length === 0) {
-            return { statusCode: 404, body: "Map not found" };
+            return { statusCode: 404, body: JSON.stringify([]) };
         }
         return {
             statusCode: 200,
@@ -138,7 +138,7 @@ const handleGetQuery = async (
         };
     } catch (error) {
         if (error === "No items found") {
-            return { statusCode: 200, body: JSON.stringify([]) };
+            return { statusCode: 404, body: JSON.stringify([]) };
         }
         console.log(error);
         return { statusCode: 500, body: "Internal Server Error (own)" };
@@ -177,7 +177,7 @@ const handlePatch = async (
     if (mapID === undefined) {
         return { statusCode: 400, body: "mapID not specified" };
     }
-    const userID = event.requestContext.authorizer?.jwt.claims.azp as string;
+    const userID = event.requestContext.authorizer?.jwt.claims.sub as string;
     const data = event.headers as patchHeaders;
     if (data.mapdata === undefined) {
         return {
@@ -195,7 +195,7 @@ export const handler = async (
     console.log(event.requestContext.authorizer);
 
     const requestType = event.requestContext.http.method;
-    let result;
+    let result: APIGatewayProxyStructuredResultV2;
 
     switch (requestType) {
         case "POST":
