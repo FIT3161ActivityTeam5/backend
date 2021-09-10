@@ -1,6 +1,9 @@
 import { APIGatewayProxyEventV2 } from "aws-lambda";
 
-export default function postEvent(mapData?: string): APIGatewayProxyEventV2 {
+export default function postEvent(items: {
+    mapData?: string;
+    userId?: string;
+}): APIGatewayProxyEventV2 {
     return {
         version: "2.0",
         routeKey: "POST /map",
@@ -13,7 +16,7 @@ export default function postEvent(mapData?: string): APIGatewayProxyEventV2 {
             "content-length": "0",
             "content-type": "application/json",
             host: "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
-            mapdata: mapData,
+            mapdata: items.mapData,
             "user-agent": "insomnia/2021.5.2",
             "x-amzn-trace-id": "Root=1-61398c38-5b63f0cf53d78c973839dfd8",
             "x-forwarded-for": "180.150.62.116",
@@ -26,9 +29,9 @@ export default function postEvent(mapData?: string): APIGatewayProxyEventV2 {
             authorizer: {
                 jwt: {
                     claims: {
-                        sub: "1ifcwRUJTtNeWWYHuZ3kayE8ARywmtKI@clients",
+                        sub: items.userId || "",
                     },
-                    scopes: [],
+                    scopes: ["post"],
                 },
             },
             domainName: "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",

@@ -1,6 +1,12 @@
 import * as app from "../../src/app";
 import getEvent from "../../events/getEvent";
 import postEvent from "../../events/postEvent";
+import patchEvent from "../../events/patchEvent";
+import {
+    DynamoDBClient,
+    GetItemCommand,
+    PutItemCommand,
+} from "@aws-sdk/client-dynamodb";
 
 const testJwtSubject = "testJWTSubjectValue";
 const testMapId = "an test ID";
@@ -22,6 +28,23 @@ const defaultSpyReturnValue = Promise.resolve({
             },
         },
     ],
+});
+
+const isTest = process.env.JEST_WORKER_ID;
+process.env.TABLE_NAME = "test-table";
+process.env.INDEX_NAME = "userIDIndex";
+
+const ddb = new DynamoDBClient({
+    ...(isTest && {
+        endpoint: "http://127.0.0.1:8000",
+        sslEnabled: false,
+        tls: false,
+        region: "ap-southeast-1",
+        credentials: {
+            accessKeyId: "fakeMyKeyId",
+            secretAccessKey: "fakeSecretAccessKey",
+        },
+    }),
 });
 
 describe("Test GET /map/{mapid}", () => {
@@ -159,13 +182,120 @@ describe("Test GET /map/list", () => {
 });
 
 describe("Test POST /map", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
     test("Handles empty mapdata", async () => {
         const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
-        const event = postEvent();
+        const event = postEvent({});
         const data = await app.handler(event);
 
         expect(spy).not.toBeCalled();
         expect(data.statusCode).toEqual(400);
         expect(JSON.parse(data.body || "")).toEqual("mapdata not specified");
+    });
+
+    test("Inserts correctly on POST", async () => {
+        jest.spyOn(app, "withDynamoClientPutItemSend").mockImplementation(
+            async (input) => await ddb.send(input)
+        );
+        const data = await app.handler(
+            postEvent({
+                mapData: "arbitrary map data",
+                userId: "testUserId",
+            })
+        );
+
+        // Look up table and verify item was inserted correctly
+        const res = await ddb.send(
+            new GetItemCommand({
+                TableName: "test-table",
+                Key: {
+                    mapID: { S: JSON.parse(data.body || "").mapID },
+                },
+            })
+        );
+        expect(res.Item).toEqual({
+            mapID: { S: JSON.parse(data.body || "").mapID },
+            associatedUserID: { S: "testUserId" },
+            mapData: { S: "arbitrary map data" },
+        });
+    });
+});
+
+describe("Test PATCH /map/{mapid}", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    test("Handles empty mapdata", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
+        const event = patchEvent({});
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toMatch(/(map).* (not specified)/);
+    });
+
+    test("Denies PATCH when no map with specified mapid exists", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
+        jest.spyOn(app, "withDynamoClientQueryItemSend").mockImplementation(
+            async (input) => await ddb.send(input)
+        );
+        // The dynamoDB mock can't reset after each test run so we have to make
+        // sure we're passing in a unique mapId to ensure it's not found in the DB.
+        const event = patchEvent({
+            mapData: "testMapData",
+            userId: "testUserId",
+            mapid: "12345-unique-asdasdasdasd",
+        });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual(
+            "A map with specified mapid does not exist"
+        );
+    });
+
+    test("Allows PATCH when specified mapId already exists in DB", async () => {
+        const spy = jest
+            .spyOn(app, "withDynamoClientPutItemSend")
+            .mockImplementation(async (input) => await ddb.send(input));
+        jest.spyOn(app, "withDynamoClientQueryItemSend").mockImplementation(
+            async (input) => await ddb.send(input)
+        );
+        ddb.send(
+            new PutItemCommand({
+                TableName: "test-table",
+                Item: {
+                    mapID: { S: "someMapId" },
+                    associatedUserID: { S: "someUserId" },
+                    mapData: { S: "mapData" },
+                },
+            })
+        );
+        const event = patchEvent({
+            mapData: "newMapData",
+            userId: "someUserId",
+            mapid: "someMapId",
+        });
+        const data = await app.handler(event);
+
+        expect(spy).toBeCalledTimes(1);
+        const res = await ddb.send(
+            new GetItemCommand({
+                TableName: "test-table",
+                Key: {
+                    mapID: { S: JSON.parse(data.body || "").mapID },
+                },
+            })
+        );
+        expect(res.Item).toEqual({
+            mapID: { S: JSON.parse(data.body || "").mapID },
+            associatedUserID: { S: "someUserId" },
+            mapData: { S: "newMapData" },
+        });
     });
 });
