@@ -16,7 +16,7 @@ export class ThriveAppStack extends cdk.Stack {
         const testFunction = new lambda.Function(this, "TestFunction", {
             code: new lambda.AssetCode("lib/src/test-function"),
             handler: "src/app.handler",
-            runtime: lambda.Runtime.NODEJS_12_X,
+            runtime: lambda.Runtime.NODEJS_14_X,
             environment: {
                 TABLE_NAME: "something",
             },
@@ -26,7 +26,7 @@ export class ThriveAppStack extends cdk.Stack {
         const mapFunction = new lambda.Function(this, "MapFunction", {
             code: new lambda.AssetCode("lib/src/map"),
             handler: "out/app.handler",
-            runtime: lambda.Runtime.NODEJS_12_X,
+            runtime: lambda.Runtime.NODEJS_14_X,
             environment: {
                 TABLE_NAME: mapTable.tableName,
                 INDEX_NAME: gsiName,
