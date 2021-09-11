@@ -4,6 +4,7 @@ export default function get_event(items: {
     mapId?: string;
     jwtSubject?: string;
     isList?: boolean;
+    definePathParameters?: boolean;
 }): APIGatewayProxyEventV2 {
     return {
         version: "2.0",
@@ -47,9 +48,12 @@ export default function get_event(items: {
             time: "24/Aug/2021:02:30:35 +0000",
             timeEpoch: 1629772235920,
         },
-        pathParameters: {
-            mapid: items.mapId || "",
-        },
+        pathParameters:
+            items.definePathParameters || items.mapId
+                ? {
+                      mapid: items.mapId,
+                  }
+                : undefined,
         isBase64Encoded: false,
     };
 }

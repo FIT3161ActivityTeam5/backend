@@ -129,9 +129,6 @@ const handleGetQuery = async (
         for (let i = 0; i < data.Items.length; i++) {
             res.push(cleanMapData(data.Items[i] as mapData));
         }
-        if (Object.keys(res).length === 0) {
-            return { statusCode: 404, body: JSON.stringify([]) };
-        }
         return {
             statusCode: 200,
             body: JSON.stringify(res),

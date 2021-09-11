@@ -8,6 +8,8 @@ import {
     PutItemCommand,
 } from "@aws-sdk/client-dynamodb";
 
+const SUPRESS_LOGS = true;
+
 const testJwtSubject = "testJWTSubjectValue";
 const testMapId = "an test ID";
 const testUserId = "testUserId";
@@ -50,7 +52,24 @@ const ddb = new DynamoDBClient({
 describe("Test GET /map/{mapid}", () => {
     afterEach(() => {
         jest.restoreAllMocks();
+        if (SUPRESS_LOGS)
+            jest.spyOn(console, "log").mockImplementation(jest.fn());
     });
+
+    test("Handles empty path parameters and no mapid", async () => {});
+
+    test.each([false, true])(
+        "Handles empty path parameters and no mapid",
+        async (val) => {
+            const spy = jest.spyOn(app, "withDynamoClientQueryItemSend");
+            const event = getEvent({ definePathParameters: val });
+            const data = await app.handler(event);
+
+            expect(spy).not.toBeCalled();
+            expect(data.statusCode).toEqual(400);
+            expect(JSON.parse(data.body || "")).toEqual("No map ID");
+        }
+    );
 
     test("Handles normal lookup", async () => {
         const event = getEvent({ mapId: testMapId });
@@ -71,7 +90,7 @@ describe("Test GET /map/{mapid}", () => {
             mapData: testMapData,
         });
     });
-    test("Handles empty response from dynamoDB", async () => {
+    test("Handles empty error response from dynamoDB", async () => {
         const event = getEvent({
             mapId: "an invalid map id",
         });
@@ -90,11 +109,32 @@ describe("Test GET /map/{mapid}", () => {
         expect(data.statusCode).toEqual(404);
         expect(JSON.parse(data.body || "")).toEqual([]);
     });
+    test("Handles empty response from dynamoDB", async () => {
+        const event = getEvent({
+            mapId: "an invalid map id",
+        });
+        const spy = jest
+            .spyOn(app, "withDynamoClientQueryItemSend")
+            .mockImplementation(async (input) => await ddb.send(input));
+
+        const data = await app.handler(event);
+        const spyCallArg = spy.mock.calls[0][0];
+        expect(spyCallArg).not.toMatchObject({
+            input: {
+                ExpressionAttributeValues: { ":s": { S: testMapId } },
+            },
+        });
+
+        expect(data.statusCode).toEqual(404);
+        expect(JSON.parse(data.body || "")).toEqual([]);
+    });
 });
 
 describe("Test GET /map/list", () => {
     afterEach(() => {
         jest.restoreAllMocks();
+        if (SUPRESS_LOGS)
+            jest.spyOn(console, "log").mockImplementation(jest.fn());
     });
 
     test("Handles no items found", async () => {
@@ -184,6 +224,8 @@ describe("Test GET /map/list", () => {
 describe("Test POST /map", () => {
     afterEach(() => {
         jest.restoreAllMocks();
+        if (SUPRESS_LOGS)
+            jest.spyOn(console, "log").mockImplementation(jest.fn());
     });
     test("Handles empty mapdata", async () => {
         const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
@@ -207,6 +249,7 @@ describe("Test POST /map", () => {
         );
 
         // Look up table and verify item was inserted correctly
+        expect(data.statusCode).toEqual(200);
         const res = await ddb.send(
             new GetItemCommand({
                 TableName: "test-table",
@@ -226,16 +269,28 @@ describe("Test POST /map", () => {
 describe("Test PATCH /map/{mapid}", () => {
     afterEach(() => {
         jest.restoreAllMocks();
+        if (SUPRESS_LOGS)
+            jest.spyOn(console, "log").mockImplementation(jest.fn());
     });
 
-    test("Handles empty mapdata", async () => {
+    test.each([false, true])("Handles no map id", async (val) => {
         const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
-        const event = patchEvent({});
+        const event = patchEvent({ definePathParameters: val });
         const data = await app.handler(event);
 
         expect(spy).not.toBeCalled();
         expect(data.statusCode).toEqual(400);
-        expect(JSON.parse(data.body || "")).toMatch(/(map).* (not specified)/);
+        expect(JSON.parse(data.body || "")).toEqual("mapID not specified");
+    });
+
+    test("Handles empty mapdata", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
+        const event = patchEvent({ mapId: "test" });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("mapdata not specified");
     });
 
     test("Denies PATCH when no map with specified mapid exists", async () => {
@@ -248,7 +303,7 @@ describe("Test PATCH /map/{mapid}", () => {
         const event = patchEvent({
             mapData: "testMapData",
             userId: "testUserId",
-            mapid: "12345-unique-asdasdasdasd",
+            mapId: "12345-unique-asdasdasdasd",
         });
         const data = await app.handler(event);
 
@@ -279,10 +334,11 @@ describe("Test PATCH /map/{mapid}", () => {
         const event = patchEvent({
             mapData: "newMapData",
             userId: "someUserId",
-            mapid: "someMapId",
+            mapId: "someMapId",
         });
         const data = await app.handler(event);
 
+        expect(data.statusCode).toEqual(200);
         expect(spy).toBeCalledTimes(1);
         const res = await ddb.send(
             new GetItemCommand({
@@ -298,4 +354,16 @@ describe("Test PATCH /map/{mapid}", () => {
             mapData: { S: "newMapData" },
         });
     });
+});
+
+describe("Miscellaneous tests", () => {
+    test.each(["HEAD", "PUT", "DELETE", "CONNECT", "TRACE", "OPTIONS"])(
+        "Handles unsupported HTTP method %s",
+        async (method) => {
+            let event = getEvent({});
+            event.requestContext.http.method = method;
+            const data = await app.handler(event);
+            expect(data.statusCode).toEqual(405);
+        }
+    );
 });

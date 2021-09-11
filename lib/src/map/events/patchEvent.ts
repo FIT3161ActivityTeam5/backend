@@ -3,7 +3,8 @@ import { APIGatewayProxyEventV2 } from "aws-lambda";
 export default function patchEvent(items: {
     mapData?: string;
     userId?: string;
-    mapid?: string;
+    mapId?: string;
+    definePathParameters?: boolean;
 }): APIGatewayProxyEventV2 {
     return {
         version: "2.0",
@@ -50,9 +51,12 @@ export default function patchEvent(items: {
             time: "10/Sep/2021:07:27:06 +0000",
             timeEpoch: 1631258826937,
         },
-        pathParameters: {
-            mapid: items.mapid,
-        },
+        pathParameters:
+            items.definePathParameters || items.mapId
+                ? {
+                      mapid: items.mapId,
+                  }
+                : undefined,
         isBase64Encoded: false,
     };
 }
