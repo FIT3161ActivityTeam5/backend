@@ -9,6 +9,7 @@ export class ThriveAppStack extends cdk.Stack {
     constructor(app: cdk.App, id: string) {
         super(app, id);
 
+        // Setup the dynamoDB table
         const gsiName = "userIDIndex";
         const tables = ThriveTables(this, gsiName);
         const mapTable = tables.mapDataTable;
@@ -49,7 +50,7 @@ export class ThriveAppStack extends cdk.Stack {
             authorizer: defaultJWTAuthorizer,
         });
 
-        // Route for either retrieving a map or updating it by its ID
+        // Route for either retrieving a map (GET) or updating it by its ID (PATCH)
         api.addRoutes({
             integration: new apigw_integrations.LambdaProxyIntegration({
                 handler: mapFunction,
