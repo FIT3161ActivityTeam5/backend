@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [12.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -26,6 +26,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: cdk synth
-    - run: cd lib/src/map/
-    - run: npm test
+    - run: npm ci
+    - run: npm i -g aws-cdk
+    - run: mkdir cdk.out && cdk synth > ./cdk.out/tmp.yaml
+    - name: Test map
+      working-directory: ./lib/src/map/
+      run: |
+          npm ci
+          npm run test
