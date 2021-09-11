@@ -13,15 +13,6 @@ export class ThriveAppStack extends cdk.Stack {
         const tables = ThriveTables(this, gsiName);
         const mapTable = tables.mapDataTable;
 
-        const testFunction = new lambda.Function(this, "TestFunction", {
-            code: new lambda.AssetCode("lib/src/test-function"),
-            handler: "src/app.handler",
-            runtime: lambda.Runtime.NODEJS_14_X,
-            environment: {
-                TABLE_NAME: "something",
-            },
-        });
-
         // This is the function that will handle map data
         const mapFunction = new lambda.Function(this, "MapFunction", {
             code: new lambda.AssetCode("lib/src/map"),
@@ -45,16 +36,6 @@ export class ThriveAppStack extends cdk.Stack {
             jwtAudience: [api.apiEndpoint, "W3HvRAyTSMN9U0AXjv3BsqThfDHMbpc1"],
             jwtIssuer: "https://dev-vak81b59.us.auth0.com/",
             authorizerName: "auth0JWTAuthorizer",
-        });
-
-        api.addRoutes({
-            integration: new apigw_integrations.LambdaProxyIntegration({
-                handler: testFunction,
-                payloadFormatVersion: apigw.PayloadFormatVersion.VERSION_2_0,
-            }),
-            path: "/test",
-            methods: [apigw.HttpMethod.GET],
-            authorizer: defaultJWTAuthorizer,
         });
 
         // POST route for adding a new map
