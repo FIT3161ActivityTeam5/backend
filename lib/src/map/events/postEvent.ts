@@ -2,7 +2,8 @@ import { APIGatewayProxyEventV2 } from "aws-lambda";
 
 export default function postEvent(items: {
     mapData?: string;
-    userId?: string;
+    jwtSubject?: string;
+    hasAuthorizer?: boolean;
 }): APIGatewayProxyEventV2 {
     return {
         version: "2.0",
@@ -26,14 +27,17 @@ export default function postEvent(items: {
         requestContext: {
             accountId: "670960088768",
             apiId: "qqvwnljate",
-            authorizer: {
-                jwt: {
-                    claims: {
-                        sub: items.userId || "",
-                    },
-                    scopes: ["post"],
-                },
-            },
+            authorizer:
+                items.hasAuthorizer || items.jwtSubject
+                    ? {
+                          jwt: {
+                              claims: {
+                                  sub: items.jwtSubject || "",
+                              },
+                              scopes: ["post"],
+                          },
+                      }
+                    : undefined,
             domainName: "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
             domainPrefix: "qqvwnljate",
             http: {

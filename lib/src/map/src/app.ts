@@ -78,7 +78,7 @@ const putOrUpdateItem = async (
         console.error(error);
         return {
             statusCode: 500,
-            body: JSON.stringify("Internal server error"),
+            body: JSON.stringify("Internal server error (own)"),
         };
     }
 };
@@ -87,7 +87,13 @@ const handlePost = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     // Extract data from request
-    const userID = event.requestContext.authorizer?.jwt.claims.sub as string;
+    if (
+        event.requestContext.authorizer === undefined ||
+        event.requestContext.authorizer.jwt.claims.sub === undefined
+    ) {
+        return { statusCode: 400, body: JSON.stringify("No user ID") };
+    }
+    const userID = event.requestContext.authorizer.jwt.claims.sub as string;
     const data = event.headers as postHeaders;
     if (data.mapdata === undefined) {
         return {
@@ -140,7 +146,7 @@ const handleGetQuery = async (
         console.error(error);
         return {
             statusCode: 500,
-            body: JSON.stringify("Internal Server Error (own)"),
+            body: JSON.stringify("Internal server error (own)"),
         };
     }
 };
@@ -149,10 +155,14 @@ const handleGet = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     if (event.rawPath.includes("list")) {
-        return handleGetQuery(
-            "associatedUserID",
-            event.requestContext.authorizer?.jwt.claims.sub as string
-        );
+        if (
+            event.requestContext.authorizer === undefined ||
+            event.requestContext.authorizer.jwt.claims.sub === undefined
+        ) {
+            return { statusCode: 400, body: JSON.stringify("No user ID") };
+        }
+        const userID = event.requestContext.authorizer.jwt.claims.sub as string;
+        return handleGetQuery("associatedUserID", userID);
     } else {
         // Extracting the map ID from the GET request
         const params = event.pathParameters;
@@ -177,7 +187,13 @@ const handlePatch = async (
     if (mapID === undefined) {
         return { statusCode: 400, body: JSON.stringify("mapID not specified") };
     }
-    const userID = event.requestContext.authorizer?.jwt.claims.sub as string;
+    if (
+        event.requestContext.authorizer === undefined ||
+        event.requestContext.authorizer.jwt.claims.sub === undefined
+    ) {
+        return { statusCode: 400, body: JSON.stringify("No user ID") };
+    }
+    const userID = event.requestContext.authorizer.jwt.claims.sub as string;
     const data = event.headers as patchHeaders;
     if (data.mapdata === undefined) {
         return {

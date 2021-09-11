@@ -122,6 +122,16 @@ describe("Test GET /map/list", () => {
             jest.spyOn(console, "log").mockImplementation(jest.fn());
     });
 
+    test("Handles undefined authorization", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientQueryItemSend");
+        const event = getEvent({ hasAuthorizer: false, isList: true });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("No user ID");
+    });
+
     test("Handles no items found with dynamo error", async () => {
         const event = getEvent({ jwtSubject: "unknownUser", isList: true });
         const spy = jest
@@ -152,7 +162,7 @@ describe("Test GET /map/list", () => {
         });
         expect(data.statusCode).toEqual(500);
         expect(JSON.parse(data.body || "")).toEqual(
-            "Internal Server Error (own)"
+            "Internal server error (own)"
         );
     });
 
@@ -251,9 +261,19 @@ describe("Test POST /map", () => {
             jest.spyOn(console, "log").mockImplementation(jest.fn());
     });
 
+    test("Handles undefined authorization", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
+        const event = postEvent({ hasAuthorizer: false });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("No user ID");
+    });
+
     test("Handles empty mapdata", async () => {
         const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
-        const event = postEvent({});
+        const event = postEvent({ jwtSubject: "test" });
         const data = await app.handler(event);
 
         expect(spy).not.toBeCalled();
@@ -268,7 +288,7 @@ describe("Test POST /map", () => {
         const data = await app.handler(
             postEvent({
                 mapData: "arbitrary map data",
-                userId: "testUserId",
+                jwtSubject: "testUserId",
             })
         );
 
@@ -292,7 +312,7 @@ describe("Test POST /map", () => {
     test("Bails on unknown error", async () => {
         const event = postEvent({
             mapData: "arbitrary map data",
-            userId: "testUserId",
+            jwtSubject: "testUserId",
         });
         const spy = jest
             .spyOn(app, "withDynamoClientPutItemSend")
@@ -300,7 +320,9 @@ describe("Test POST /map", () => {
         const data = await app.handler(event);
 
         expect(data.statusCode).toEqual(500);
-        expect(JSON.parse(data.body || "")).toEqual("Internal server error");
+        expect(JSON.parse(data.body || "")).toEqual(
+            "Internal server error (own)"
+        );
     });
 });
 
@@ -309,6 +331,16 @@ describe("Test PATCH /map/{mapid}", () => {
         jest.restoreAllMocks();
         if (SUPRESS_LOGS)
             jest.spyOn(console, "log").mockImplementation(jest.fn());
+    });
+
+    test("Handles undefined authorization", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
+        const event = patchEvent({ hasAuthorizer: false, mapId: "test" });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("No user ID");
     });
 
     test.each([false, true])("Handles no map id", async (val) => {
@@ -323,7 +355,7 @@ describe("Test PATCH /map/{mapid}", () => {
 
     test("Handles empty mapdata", async () => {
         const spy = jest.spyOn(app, "withDynamoClientPutItemSend");
-        const event = patchEvent({ mapId: "test" });
+        const event = patchEvent({ mapId: "test", userId: "test" });
         const data = await app.handler(event);
 
         expect(spy).not.toBeCalled();
@@ -404,4 +436,16 @@ describe("Miscellaneous tests", () => {
             expect(data.statusCode).toEqual(405);
         }
     );
+
+    test.each([
+        postEvent({ mapData: "yes", jwtSubject: "yes" }),
+        getEvent({ mapId: "yes", jwtSubject: "test" }),
+    ])("$routeKey route bails on client error", async (event) => {
+        jest.spyOn(console, "error").mockImplementation(jest.fn());
+        const data = await app.handler(event);
+        expect(data.statusCode).toEqual(500);
+        expect(JSON.parse(data.body || "")).toEqual(
+            "Internal server error (own)"
+        );
+    });
 });

@@ -5,6 +5,7 @@ export default function patchEvent(items: {
     userId?: string;
     mapId?: string;
     definePathParameters?: boolean;
+    hasAuthorizer?: boolean;
 }): APIGatewayProxyEventV2 {
     return {
         version: "2.0",
@@ -28,14 +29,17 @@ export default function patchEvent(items: {
         requestContext: {
             accountId: "670960088768",
             apiId: "qqvwnljate",
-            authorizer: {
-                jwt: {
-                    claims: {
-                        sub: items.userId || "",
-                    },
-                    scopes: ["patch"],
-                },
-            },
+            authorizer:
+                items.hasAuthorizer || items.userId
+                    ? {
+                          jwt: {
+                              claims: {
+                                  sub: items.userId || "",
+                              },
+                              scopes: ["post"],
+                          },
+                      }
+                    : undefined,
             domainName: "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
             domainPrefix: "qqvwnljate",
             http: {

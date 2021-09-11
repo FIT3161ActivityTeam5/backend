@@ -5,6 +5,7 @@ export default function get_event(items: {
     jwtSubject?: string;
     isList?: boolean;
     definePathParameters?: boolean;
+    hasAuthorizer?: boolean;
 }): APIGatewayProxyEventV2 {
     return {
         version: "2.0",
@@ -30,9 +31,17 @@ export default function get_event(items: {
         requestContext: {
             accountId: "670960088768",
             apiId: "qqvwnljate",
-            authorizer: {
-                jwt: { claims: { sub: items.jwtSubject || "" }, scopes: [] },
-            },
+            authorizer:
+                items.hasAuthorizer || items.jwtSubject
+                    ? {
+                          jwt: {
+                              claims: {
+                                  sub: items.jwtSubject || "",
+                              },
+                              scopes: ["post"],
+                          },
+                      }
+                    : undefined,
             domainName: "qqvwnljate.execute-api.ap-southeast-2.amazonaws.com",
             domainPrefix: "qqvwnljate",
             http: {
