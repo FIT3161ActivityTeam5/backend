@@ -1,5 +1,7 @@
 # FIT3162 Group 5 Backend
 
+[![Node.js CI](https://github.com/FIT3161ActivityTeam5/backend/actions/workflows/node.js.yml/badge.svg)](https://github.com/FIT3161ActivityTeam5/backend/actions/workflows/node.js.yml)
+
 This is our backend application for Thrive, developed using TypeScript and the AWS CDK.
 
 ## Useful commands
