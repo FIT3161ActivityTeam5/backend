@@ -1,14 +1,26 @@
 # FIT3162 Group 5 Backend
 
+<img align=right src="diagram-crop.png" width=30%>
+
 [![Node.js CI](https://github.com/FIT3161ActivityTeam5/backend/actions/workflows/node.js.yml/badge.svg)](https://github.com/FIT3161ActivityTeam5/backend/actions/workflows/node.js.yml)
 
 This is our backend application for Thrive, developed using TypeScript and the AWS CDK.
 
-## Useful commands
+## Deploying
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+-   Clone the repo
+-   Run `npm install`
+-   `cd` to `lib/src/map` and run `npm install`
+-   Install the AWS CDK if you haven't already: `npm install -g aws-cdk`
+    -   Ensure your AWS credentials are set at `~/.aws`
+    -   You may also need to bootstrap your AWS environment - more details [here](https://docs.aws.amazon.com/cdk/latest/guide/bootstrapping.html)
+-   `cd` back to the main directory and run `./cdk.ps1 deploy`
+    -   This will compile all the Lambda functions and deploy the stack to your AWS account
+
+## Testing
+
+<img align=right src="img/tests.jpg" width=30%>
+
+Tests exist for the `map` Lambda function, located at `lib/src/map`. These tests are located at `lib/src/map/tests/unit` and provide 100% line, branch and function coverage for the Lambda function (`app.ts`). They can be run with `npm run test`, or `npm run testcov` to generate test coverage data.
+
+<img src="img/coverage.jpg" width=50%>
