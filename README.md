@@ -19,8 +19,11 @@ This is our backend application for Thrive, developed using TypeScript and the A
 
 ## Testing
 
-<img align=right src="img/tests.jpg" width=30%>
-
 Tests exist for the `map` Lambda function, located at `lib/src/map`. These tests are located at `lib/src/map/tests/unit` and provide 100% line, branch and function coverage for the Lambda function (`app.ts`). They can be run with `npm run test`, or `npm run testcov` to generate test coverage data.
 
-<img src="img/coverage.jpg" width=50%>
+<br>
+<br>
+<p align="center">
+  <img src="img/coverage.jpg" />
+  <img src="img/tests.jpg" />
+</p>
