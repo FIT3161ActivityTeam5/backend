@@ -140,13 +140,11 @@ const handleGetQuery = async (
     queryParamName: "mapID" | "associatedUserID",
     queryParamValue: string
 ): Promise<APIGatewayProxyStructuredResultV2> => {
+    const isListQuery = queryParamName === "associatedUserID";
     // Setting up the DynamoDB query
     const queryParams: QueryCommandInput = {
         TableName: process.env.TABLE_NAME,
-        IndexName:
-            queryParamName === "associatedUserID"
-                ? process.env.INDEX_NAME
-                : undefined,
+        IndexName: isListQuery ? process.env.INDEX_NAME : undefined,
         KeyConditionExpression: queryParamName + " = :s",
         ExpressionAttributeValues: {
             ":s": {
@@ -160,7 +158,10 @@ const handleGetQuery = async (
     try {
         const data = await withDynamoClientQueryItemSend(queryCommand);
         if (!data.Items || data.Items.length === 0) {
-            return { statusCode: 404, body: JSON.stringify([]) };
+            return {
+                statusCode: isListQuery ? 200 : 404,
+                body: JSON.stringify([]),
+            };
         }
         const res: mapData[] = [];
         for (let i = 0; i < data.Items.length; i++) {
@@ -172,7 +173,10 @@ const handleGetQuery = async (
         };
     } catch (error) {
         if (error === "No items found") {
-            return { statusCode: 404, body: JSON.stringify([]) };
+            return {
+                statusCode: isListQuery ? 200 : 404,
+                body: JSON.stringify([]),
+            };
         }
         console.error(error);
         return {
