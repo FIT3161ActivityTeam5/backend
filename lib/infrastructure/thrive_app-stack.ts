@@ -9,24 +9,16 @@ export class ThriveAppStack extends cdk.Stack {
     constructor(app: cdk.App, id: string) {
         super(app, id);
 
+        // Setup the dynamoDB table
         const gsiName = "userIDIndex";
         const tables = ThriveTables(this, gsiName);
         const mapTable = tables.mapDataTable;
-
-        const testFunction = new lambda.Function(this, "TestFunction", {
-            code: new lambda.AssetCode("lib/src/test-function"),
-            handler: "src/app.handler",
-            runtime: lambda.Runtime.NODEJS_12_X,
-            environment: {
-                TABLE_NAME: "something",
-            },
-        });
 
         // This is the function that will handle map data
         const mapFunction = new lambda.Function(this, "MapFunction", {
             code: new lambda.AssetCode("lib/src/map"),
             handler: "out/app.handler",
-            runtime: lambda.Runtime.NODEJS_12_X,
+            runtime: lambda.Runtime.NODEJS_14_X,
             environment: {
                 TABLE_NAME: mapTable.tableName,
                 INDEX_NAME: gsiName,
@@ -47,16 +39,6 @@ export class ThriveAppStack extends cdk.Stack {
             authorizerName: "auth0JWTAuthorizer",
         });
 
-        api.addRoutes({
-            integration: new apigw_integrations.LambdaProxyIntegration({
-                handler: testFunction,
-                payloadFormatVersion: apigw.PayloadFormatVersion.VERSION_2_0,
-            }),
-            path: "/test",
-            methods: [apigw.HttpMethod.GET],
-            authorizer: defaultJWTAuthorizer,
-        });
-
         // POST route for adding a new map
         api.addRoutes({
             integration: new apigw_integrations.LambdaProxyIntegration({
@@ -68,7 +50,7 @@ export class ThriveAppStack extends cdk.Stack {
             authorizer: defaultJWTAuthorizer,
         });
 
-        // Route for either retrieving a map or updating it by its ID
+        // Route for either retrieving a map (GET) or updating it by its ID (PATCH)
         api.addRoutes({
             integration: new apigw_integrations.LambdaProxyIntegration({
                 handler: mapFunction,

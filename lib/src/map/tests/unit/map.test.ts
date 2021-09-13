@@ -83,7 +83,7 @@ describe("Test GET /map/{mapid}", () => {
         });
         const spy = jest
             .spyOn(app, "withDynamoClientQueryItemSend")
-            .mockImplementation(async (input) => await mockDB.send(input));
+            .mockRejectedValue("No items found");
         const data = await app.handler(event);
 
         expect(spy.mock.calls[0][0]).toMatchObject({
@@ -144,7 +144,7 @@ describe("Test GET /map/list", () => {
                 ExpressionAttributeValues: { ":s": { S: "unknownUser" } },
             },
         });
-        expect(data.statusCode).toEqual(404);
+        expect(data.statusCode).toEqual(200);
         expect(JSON.parse(data.body || "")).toEqual([]);
     });
 
@@ -178,7 +178,7 @@ describe("Test GET /map/list", () => {
                 ExpressionAttributeValues: { ":s": { S: "unknownUser" } },
             },
         });
-        expect(data.statusCode).toEqual(404);
+        expect(data.statusCode).toEqual(200);
         expect(JSON.parse(data.body || "")).toEqual([]);
     });
 
