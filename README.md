@@ -1,6 +1,6 @@
 # FIT3162 Group 5 Backend
 
-<img align=right src="diagram-crop.png" width=30%>
+<img align=right src="img/diagram-crop.png" width=20%>
 
 [![Node.js CI](https://github.com/FIT3161ActivityTeam5/backend/actions/workflows/node.js.yml/badge.svg)](https://github.com/FIT3161ActivityTeam5/backend/actions/workflows/node.js.yml)
 
