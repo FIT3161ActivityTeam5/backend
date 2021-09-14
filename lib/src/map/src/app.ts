@@ -52,6 +52,38 @@ interface patchHeaders {
     [mapdata: string]: string | undefined;
 }
 
+// Helper validation functions
+const validateUserID = (event: APIGatewayProxyEventV2) => {
+    if (
+        event.requestContext.authorizer === undefined ||
+        event.requestContext.authorizer.jwt.claims.sub === undefined
+    ) {
+        return false;
+    }
+    return event.requestContext.authorizer.jwt.claims.sub as string;
+};
+
+const validateMapID = (event: APIGatewayProxyEventV2) => {
+    if (
+        event.pathParameters === undefined ||
+        event.pathParameters.mapid === undefined
+    ) {
+        return false;
+    }
+    return event.pathParameters.mapid;
+};
+
+// Simple wrapper for APIGW Proxy response
+const response = (
+    statusCode: number,
+    body?: any
+): APIGatewayProxyStructuredResultV2 => {
+    return {
+        statusCode: statusCode,
+        body: JSON.stringify(body),
+    };
+};
+
 /**
  * Takes dynamoDB item output and cleans it up
  * @param mapData Uncleaned dynamoDB output
@@ -92,16 +124,10 @@ const putOrUpdateItem = async (
     const putCommand = new PutItemCommand(putItemData);
     try {
         await withDynamoClientPutItemSend(putCommand);
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ mapID: mapID }),
-        };
+        return response(200, { mapID: mapID });
     } catch (error) {
         console.error(error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify("Internal server error (own)"),
-        };
+        return response(500, "Internal server error (own)");
     }
 };
 
@@ -115,21 +141,14 @@ const handlePost = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     // Extract & validate JWT subject to use as user ID
-    if (
-        event.requestContext.authorizer === undefined ||
-        event.requestContext.authorizer.jwt.claims.sub === undefined
-    ) {
-        return { statusCode: 400, body: JSON.stringify("No user ID") };
+    const userID = validateUserID(event);
+    if (!userID) {
+        return response(400, "No user ID");
     }
-    const userID = event.requestContext.authorizer.jwt.claims.sub as string;
     const data = event.headers as postHeaders;
-
-    // Validate mapdata and map ID
+    // Validate mapdata
     if (data.mapdata === undefined) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify("mapdata not specified"),
-        };
+        return response(400, "mapdata not specified");
     }
     const mapID = randomBytes(20).toString("hex");
     return putOrUpdateItem(mapID, data.mapdata, userID);
@@ -166,31 +185,19 @@ const handleGetQuery = async (
     try {
         const data = await withDynamoClientQueryItemSend(queryCommand);
         if (!data.Items || data.Items.length === 0) {
-            return {
-                statusCode: isListQuery ? 200 : 404,
-                body: JSON.stringify([]),
-            };
+            return response(isListQuery ? 200 : 404, []);
         }
         const res: mapData[] = [];
         for (let i = 0; i < data.Items.length; i++) {
             res.push(cleanMapData(data.Items[i] as mapData));
         }
-        return {
-            statusCode: 200,
-            body: JSON.stringify(res),
-        };
+        return response(200, res);
     } catch (error) {
         if (error === "No items found") {
-            return {
-                statusCode: isListQuery ? 200 : 404,
-                body: JSON.stringify([]),
-            };
+            return response(isListQuery ? 200 : 404, []);
         }
         console.error(error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify("Internal server error (own)"),
-        };
+        return response(500, "Internal server error (own)");
     }
 };
 
@@ -206,23 +213,16 @@ const handleGet = async (
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     if (event.rawPath.includes("list")) {
         // Extract & validate JWT subject to use as user ID
-        if (
-            event.requestContext.authorizer === undefined ||
-            event.requestContext.authorizer.jwt.claims.sub === undefined
-        ) {
-            return { statusCode: 400, body: JSON.stringify("No user ID") };
+        const userID = validateUserID(event);
+        if (!userID) {
+            return response(400, "No user ID");
         }
-        const userID = event.requestContext.authorizer.jwt.claims.sub as string;
         return handleGetQuery("associatedUserID", userID);
     } else {
         // Extracting the map ID from the GET request
-        const params = event.pathParameters;
-        if (!params) {
-            return { statusCode: 400, body: JSON.stringify("No map ID") };
-        }
-        const mapID = params.mapid;
+        const mapID = validateMapID(event);
         if (!mapID) {
-            return { statusCode: 400, body: JSON.stringify("No map ID") };
+            return response(400, "No map ID");
         }
         return handleGetQuery("mapID", mapID);
     }
@@ -239,28 +239,19 @@ const handlePatch = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     // Validate map ID
-    if (event.pathParameters === undefined) {
-        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
-    }
-    const mapID = event.pathParameters.mapid;
-    if (mapID === undefined) {
-        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
+    const mapID = validateMapID(event);
+    if (!mapID) {
+        return response(400, "No map ID");
     }
     // Extract & validate JWT subject to use as user ID
-    if (
-        event.requestContext.authorizer === undefined ||
-        event.requestContext.authorizer.jwt.claims.sub === undefined
-    ) {
-        return { statusCode: 400, body: JSON.stringify("No user ID") };
+    const userID = validateUserID(event);
+    if (!userID) {
+        return response(400, "No user ID");
     }
-    const userID = event.requestContext.authorizer.jwt.claims.sub as string;
     // Validate map data
     const data = event.headers as patchHeaders;
     if (data.mapdata === undefined) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify("mapdata not specified"),
-        };
+        return response(400, "mapdata not specified");
     }
     // Query database to make sure user is not PATCHing a nonexistent map
     const res = await withDynamoClientQueryItemSend(
@@ -275,12 +266,8 @@ const handlePatch = async (
         })
     );
     if (res.Count === 0) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify("A map with specified mapid does not exist"),
-        };
+        return response(400, "A map with specified mapid does not exist");
     }
-
     return putOrUpdateItem(mapID, data.mapdata, userID);
 };
 
@@ -299,21 +286,15 @@ const handleDelete = async (
     event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     // Validate map ID
-    if (event.pathParameters === undefined) {
-        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
-    }
-    const mapID = event.pathParameters.mapid;
-    if (mapID === undefined) {
-        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
+    const mapID = validateMapID(event);
+    if (!mapID) {
+        return response(400, "No map ID");
     }
     // Validate user ID from JWT auth
-    if (
-        event.requestContext.authorizer === undefined ||
-        event.requestContext.authorizer.jwt.claims.sub === undefined
-    ) {
-        return { statusCode: 400, body: JSON.stringify("No user ID") };
+    const userID = validateUserID(event);
+    if (!userID) {
+        return response(400, "No user ID");
     }
-    const userID = event.requestContext.authorizer.jwt.claims.sub as string;
 
     // Build parameters
     const deleteParams: DeleteItemCommandInput = {
@@ -336,20 +317,15 @@ const handleDelete = async (
     const deleteCommand = new DeleteItemCommand(deleteParams);
     try {
         await withDynamoClientDeleteItemSend(deleteCommand);
-        return { statusCode: 200 };
+        return response(200);
     } catch (error) {
         // e.name doesn't play nice with Jest
         // @ts-ignore
         if (error.name === "ConditionalCheckFailedException") {
-            return {
-                statusCode: 404,
-            };
+            return response(404);
         }
         console.error(error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify("Internal server error (own)"),
-        };
+        return response(500, "Internal server error (own)");
     }
 };
 
@@ -386,6 +362,5 @@ export const handler = async (
                 statusCode: 405,
             };
     }
-
     return result;
 };

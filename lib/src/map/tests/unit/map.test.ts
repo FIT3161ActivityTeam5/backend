@@ -352,7 +352,7 @@ describe("Test PATCH /map/{mapid}", () => {
 
         expect(spy).not.toBeCalled();
         expect(data.statusCode).toEqual(400);
-        expect(JSON.parse(data.body || "")).toEqual("mapID not specified");
+        expect(JSON.parse(data.body || "")).toEqual("No map ID");
     });
 
     test("Handles empty mapdata", async () => {
@@ -445,7 +445,7 @@ describe("Test DELETE /map/{mapid}", () => {
 
         expect(spy).not.toBeCalled();
         expect(data.statusCode).toEqual(400);
-        expect(JSON.parse(data.body || "")).toEqual("mapID not specified");
+        expect(JSON.parse(data.body || "")).toEqual("No map ID");
     });
 
     test("Handles undefined authorization", async () => {
