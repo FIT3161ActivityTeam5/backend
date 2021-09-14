@@ -2,7 +2,9 @@ import * as app from "../../src/app";
 import getEvent from "../../events/getEvent";
 import postEvent from "../../events/postEvent";
 import patchEvent from "../../events/patchEvent";
+import deleteEvent from "../../events/deleteEvent";
 import {
+    DeleteItemCommand,
     DynamoDBClient,
     GetItemCommand,
     PutItemCommand,
@@ -426,8 +428,119 @@ describe("Test PATCH /map/{mapid}", () => {
     });
 });
 
+describe("Test DELETE /map/{mapid}", () => {
+    afterEach(() => {
+        jest.restoreAllMocks();
+        if (SUPRESS_LOGS)
+            jest.spyOn(console, "log").mockImplementation(jest.fn());
+    });
+
+    test.each([false, true])("Handles empty mapid", async (val) => {
+        const spy = jest.spyOn(app, "withDynamoClientDeleteItemSend");
+        const event = deleteEvent({
+            userId: "test",
+            definePathParameters: val,
+        });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("mapID not specified");
+    });
+
+    test("Handles undefined authorization", async () => {
+        const spy = jest.spyOn(app, "withDynamoClientDeleteItemSend");
+        const event = deleteEvent({
+            hasAuthorizer: false,
+            mapId: "test",
+        });
+        const data = await app.handler(event);
+
+        expect(spy).not.toBeCalled();
+        expect(data.statusCode).toEqual(400);
+        expect(JSON.parse(data.body || "")).toEqual("No user ID");
+    });
+
+    test("Handles delete request for nonexistent item", async () => {
+        const spy = jest
+            .spyOn(app, "withDynamoClientDeleteItemSend")
+            .mockImplementation(async (input) => await mockDB.send(input));
+        const event = deleteEvent({
+            userId: "delete-test-userid",
+            mapId: "delete-test-mapid",
+        });
+        const data = await app.handler(event);
+
+        expect(spy).toBeCalledTimes(1);
+        expect(spy.mock.calls[0][0]).toMatchObject({
+            input: {
+                ExpressionAttributeValues: {
+                    ":s": { S: "delete-test-userid" },
+                },
+            },
+        });
+        expect(data.statusCode).toEqual(404);
+    });
+
+    test("Handles delete request for item that exists", async () => {
+        const spy = jest
+            .spyOn(app, "withDynamoClientDeleteItemSend")
+            .mockImplementation(async (input) => await mockDB.send(input));
+        const event = deleteEvent({
+            userId: "delete-test-userid",
+            mapId: "delete-test-mapid",
+        });
+        await mockDB.send(
+            new PutItemCommand({
+                TableName: "test-table",
+                Item: {
+                    mapID: { S: "delete-test-mapid" },
+                    associatedUserID: { S: "delete-test-userid" },
+                    mapData: { S: "some map data" },
+                },
+            })
+        );
+        const data = await app.handler(event);
+
+        expect(spy).toBeCalledTimes(1);
+        expect(spy.mock.calls[0][0]).toMatchObject({
+            input: {
+                ExpressionAttributeValues: {
+                    ":s": { S: "delete-test-userid" },
+                },
+            },
+        });
+        expect(data.statusCode).toEqual(200);
+        const res = await mockDB.send(
+            new GetItemCommand({
+                TableName: "test-table",
+                Key: {
+                    mapID: { S: "delete-test-mapid" },
+                },
+            })
+        );
+        expect(res.Item).toBeUndefined();
+    });
+
+    test("Bails on unknown error", async () => {
+        const event = deleteEvent({
+            mapId: "arbitrary map id",
+            userId: "testUserId",
+        });
+        const spy = jest
+            .spyOn(app, "withDynamoClientDeleteItemSend")
+            .mockRejectedValue("Hitherto unforseen error");
+        const data = await app.handler(event);
+
+        expect(data.statusCode).toEqual(500);
+        expect(JSON.parse(data.body || "")).toEqual(
+            "Internal server error (own)"
+        );
+    });
+});
+
 describe("Miscellaneous tests", () => {
-    test.each(["HEAD", "PUT", "DELETE", "CONNECT", "TRACE", "OPTIONS"])(
+    test.each(["HEAD", "PUT", "CONNECT", "TRACE", "OPTIONS"])(
         "Handles unsupported HTTP method %s",
         async (method) => {
             let event = getEvent({});
@@ -440,6 +553,7 @@ describe("Miscellaneous tests", () => {
     test.each([
         postEvent({ mapData: "yes", jwtSubject: "yes" }),
         getEvent({ mapId: "yes", jwtSubject: "test" }),
+        deleteEvent({ mapId: "yes", userId: "yes" }),
     ])("$routeKey route bails on client error", async (event) => {
         jest.spyOn(console, "error").mockImplementation(jest.fn());
         const data = await app.handler(event);
