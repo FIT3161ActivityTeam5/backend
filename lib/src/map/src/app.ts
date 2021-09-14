@@ -345,6 +345,7 @@ const handleDelete = async (
                 statusCode: 404,
             };
         }
+        console.error(error);
         return {
             statusCode: 500,
             body: JSON.stringify("Internal server error (own)"),
