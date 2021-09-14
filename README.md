@@ -32,6 +32,7 @@ This is our backend application for Thrive, developed using TypeScript and the A
 ### GET `/map/{mapid}`
 
 Retrieves the map specified by `mapid`. You'll get a `404` if there is no map found.
+
 Example return data:
 
 ```json
@@ -86,6 +87,7 @@ Updates the map specified by `mapid`.
 Same return data as POST, you'll just get back the mapid.
 
 Important: you can only PATCH existing `mapid`s. If you try PATCHing a nonexistent `mapid` you'll get a 400.
+
 Example return data:
 
 ```json

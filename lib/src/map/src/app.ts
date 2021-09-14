@@ -338,6 +338,7 @@ const handleDelete = async (
         await withDynamoClientDeleteItemSend(deleteCommand);
         return { statusCode: 200 };
     } catch (error) {
+        // e.name doesn't play nice with Jest
         // @ts-ignore
         if (error.name === "ConditionalCheckFailedException") {
             return {
