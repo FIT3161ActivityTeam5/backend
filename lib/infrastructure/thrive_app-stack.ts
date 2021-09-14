@@ -57,7 +57,11 @@ export class ThriveAppStack extends cdk.Stack {
                 payloadFormatVersion: apigw.PayloadFormatVersion.VERSION_2_0,
             }),
             path: "/map/{mapid}",
-            methods: [apigw.HttpMethod.GET, apigw.HttpMethod.PATCH],
+            methods: [
+                apigw.HttpMethod.GET,
+                apigw.HttpMethod.PATCH,
+                apigw.HttpMethod.DELETE,
+            ],
             authorizer: defaultJWTAuthorizer,
         });
 

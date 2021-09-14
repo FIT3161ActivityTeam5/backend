@@ -8,6 +8,8 @@ import {
     QueryCommandInput,
     PutItemCommand,
     PutItemCommandInput,
+    DeleteItemCommandInput,
+    DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { randomBytes } from "crypto";
 
@@ -19,6 +21,12 @@ export const withDynamoClientPutItemSend = async (input: PutItemCommand) => {
 };
 
 export const withDynamoClientQueryItemSend = async (input: QueryCommand) => {
+    return client.send(input);
+};
+
+export const withDynamoClientDeleteItemSend = async (
+    input: DeleteItemCommand
+) => {
     return client.send(input);
 };
 
@@ -277,6 +285,75 @@ const handlePatch = async (
 };
 
 /**
+ * Base handler for DELETE requests. We first validate parameters and then
+ * attempt to delete the item. For ease of downstream we differentiate
+ * responses based on whether the delete operation did anything. Additionally,
+ * we have checks to make sure the user is only allowed to delete their own
+ * maps.
+ * @param event The lambda proxy event passed from API Gateway
+ * @returns Lambda result with status code. The status code is 200 if an item
+ * was deleted. We return 404 if a) the user attempts to delete a map that does
+ * not belong to them or b) if the user has referenced a nonexistent map ID.
+ */
+const handleDelete = async (
+    event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyStructuredResultV2> => {
+    // Validate map ID
+    if (event.pathParameters === undefined) {
+        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
+    }
+    const mapID = event.pathParameters.mapid;
+    if (mapID === undefined) {
+        return { statusCode: 400, body: JSON.stringify("mapID not specified") };
+    }
+    // Validate user ID from JWT auth
+    if (
+        event.requestContext.authorizer === undefined ||
+        event.requestContext.authorizer.jwt.claims.sub === undefined
+    ) {
+        return { statusCode: 400, body: JSON.stringify("No user ID") };
+    }
+    const userID = event.requestContext.authorizer.jwt.claims.sub as string;
+
+    // Build parameters
+    const deleteParams: DeleteItemCommandInput = {
+        TableName: process.env.TABLE_NAME,
+        Key: {
+            mapID: {
+                S: mapID,
+            },
+        },
+        // The user should not be able to delete maps that do not belong to them
+        // This will also cause the operation to error out if the map ID
+        // belongs to someone else. This is intended behaviour
+        ConditionExpression: "associatedUserID = :s",
+        ExpressionAttributeValues: {
+            ":s": {
+                S: userID,
+            },
+        },
+    };
+    const deleteCommand = new DeleteItemCommand(deleteParams);
+    try {
+        await withDynamoClientDeleteItemSend(deleteCommand);
+        return { statusCode: 200 };
+    } catch (error) {
+        // e.name doesn't play nice with Jest
+        // @ts-ignore
+        if (error.name === "ConditionalCheckFailedException") {
+            return {
+                statusCode: 404,
+            };
+        }
+        console.error(error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify("Internal server error (own)"),
+        };
+    }
+};
+
+/**
  * Base handler for the Lambda function. Determines the HTTP method and calls
  * the respective functions.
  * @param event The lambda proxy event passed from API Gateway
@@ -300,6 +377,9 @@ export const handler = async (
             break;
         case "PATCH":
             result = await handlePatch(event);
+            break;
+        case "DELETE":
+            result = await handleDelete(event);
             break;
         default:
             result = {
