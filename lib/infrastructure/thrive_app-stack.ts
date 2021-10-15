@@ -24,6 +24,7 @@ export class ThriveAppStack extends cdk.Stack {
                 INDEX_NAME: gsiName,
             },
             timeout: cdk.Duration.seconds(30),
+            memorySize: 1024,
         });
         mapTable.grantReadWriteData(mapFunction);
 
