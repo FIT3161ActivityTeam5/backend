@@ -25,6 +25,7 @@ export class ThriveAppStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(30),
             memorySize: 1024,
+            architecture: lambda.Architecture.ARM_64,
         });
         mapTable.grantReadWriteData(mapFunction);
 
